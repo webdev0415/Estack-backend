@@ -12,6 +12,7 @@ import { LoyaltyTierModule } from '../loyalty-tier/loyalty-tier.module';
 import { PointCurrencyModule } from '../point-currency/point-currency.module';
 import { StripeService } from '../../util/spripe/stripe';
 import { FilesModule } from '../filel/files.module';
+import { CryptoService } from 'util/crypto/crypto/crypto.service';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { FilesModule } from '../filel/files.module';
     PointCurrencyModule,
     FilesModule,
   ],
-  providers: [MerchantService, StripeService],
+  providers: [MerchantService, StripeService, CryptoService],
   controllers: [MerchantController],
   exports: [MerchantService],
 })
