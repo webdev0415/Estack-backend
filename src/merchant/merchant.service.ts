@@ -126,7 +126,8 @@ export class MerchantService {
       // send email
       return this.emailValidationService.sendCode(email);
     }
-    // TODO create merchant
+    // TODO create merchant. Throw exception for now
+    throw new HttpException('Email not exist', HttpStatus.NOT_FOUND);
   }
 
   async otpValidate(otp: ValidateOtpDto) {
