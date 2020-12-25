@@ -37,6 +37,7 @@ import { PaymentCycleEnum } from 'src/subscription/enum/paymentCycle.enum';
 import { LoginResponseDto } from 'src/auth/dto/login-response.dto';
 import { ValidateOtpDto } from './dto/validate-otp.dto';
 import { CryptoService } from 'util/crypto/crypto/crypto.service';
+import { CreateOtpResponseDto } from './dto/create-otp-response.dto';
 
 @Injectable()
 export class MerchantService {
@@ -124,7 +125,7 @@ export class MerchantService {
     };
   }
 
-  async otpGenerate(otpRequest: CreateOtpDto): Promise<{ existed: boolean }> {
+  async otpGenerate(otpRequest: CreateOtpDto): Promise<CreateOtpResponseDto> {
     const { email } = otpRequest;
     if (await this.usersService.exist({ 'auth.email': email })) {
       // send email

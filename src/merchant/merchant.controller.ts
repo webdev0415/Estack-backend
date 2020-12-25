@@ -23,6 +23,7 @@ import { UsersService } from '../users/users.service';
 import { CreateOtpDto } from './dto/create-otp.dto';
 import { ValidateOtpDto } from './dto/validate-otp.dto';
 import { LoginResponseDto } from 'src/auth/dto/login-response.dto';
+import { CreateOtpResponseDto } from './dto/create-otp-response.dto';
 
 /**
  * merchant controller
@@ -69,8 +70,8 @@ export class MerchantController {
    */
   @Post('/signup/optgenerate')
   @ApiOperation({ operationId: 'optGenerate' })
-  @ApiResponse({ status: 201, description: 'OK' })
-  async optGenerate(@Body() otpRequest: CreateOtpDto): Promise<{ existed: boolean }> {
+  @ApiResponse({ status: 201, description: 'OK', type: CreateOtpResponseDto })
+  async optGenerate(@Body() otpRequest: CreateOtpDto): Promise<CreateOtpResponseDto> {
     this.logger.log(`signup otp ${otpRequest.email}`);
     return this.merchantService.otpGenerate(otpRequest);
   }
