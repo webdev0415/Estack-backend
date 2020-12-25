@@ -32,8 +32,8 @@ import { CreateFileDto } from '../filel/dto/create-file.dto';
 import { FilesRepository } from '../filel/files.repository';
 import { BusinessDto } from '../business/dto/business.dto';
 import { CreateOtpDto } from './dto/create-otp.dto';
-import { signinOtpGenerate } from 'util/htmlPages/SigninOtpGenerate';
 import { ValidateOtpDto } from './dto/validate-otp.dto';
+import { EmailValidationService } from 'util/email-validation.service';
 
 @Injectable()
 export class MerchantService {
@@ -62,6 +62,7 @@ export class MerchantService {
     private readonly pointCurrency: PointCurrencyService,
     private readonly stripeService: StripeService,
     private readonly fileRepository: FilesRepository,
+    private readonly emailValidationService: EmailValidationService,
   ) {
   }
 
@@ -123,19 +124,29 @@ export class MerchantService {
     const { email } = otpRequest;
     if (await this.usersService.exist({ 'auth.email': email })) {
       // send email
-      // TODO use passwordless
-      sendEmail(email, 'Passwordless login', signinOtpGenerate(getRandom4Numbers()));
+      return this.emailValidationService.sendCode(email);
     }
     // TODO create merchant
   }
 
   async otpValidate(otp: ValidateOtpDto) {
-    const { email } = otp;
+    const { email, code } = otp;
 
     const user = await this.usersService.getByEmail(email);
 
     if (!user) {
-      throw new HttpException('Email not exist', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Email not exist', HttpStatus.UNAUTHORIZED);
+    }
+
+    // validate code
+    const isValid = await this.emailValidationService.validateCode(email, code);
+    if (isValid === false) {
+      throw new HttpException({
+        code: 4010101,
+        message: 'Invalid verification code',
+      },
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     return this.authService.loginMerchant(user);
