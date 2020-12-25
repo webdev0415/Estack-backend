@@ -31,6 +31,9 @@ import { UpdateMerchantDto } from './dto/update-merchant.dto';
 import { CreateFileDto } from '../filel/dto/create-file.dto';
 import { FilesRepository } from '../filel/files.repository';
 import { BusinessDto } from '../business/dto/business.dto';
+import { CreateOtpDto } from './dto/create-otp.dto';
+import { signinOtpGenerate } from 'util/htmlPages/SigninOtpGenerate';
+import { ValidateOtpDto } from './dto/validate-otp.dto';
 
 @Injectable()
 export class MerchantService {
@@ -114,6 +117,28 @@ export class MerchantService {
         subscription,
       }),
     };
+  }
+
+  async otpGenerate(otpRequest: CreateOtpDto) {
+    const { email } = otpRequest;
+    if (await this.usersService.exist({ 'auth.email': email })) {
+      // send email
+      // TODO use passwordless
+      sendEmail(email, 'Passwordless login', signinOtpGenerate(getRandom4Numbers()));
+    }
+    // TODO create merchant
+  }
+
+  async otpValidate(otp: ValidateOtpDto) {
+    const { email } = otp;
+
+    const user = await this.usersService.getByEmail(email);
+
+    if (!user) {
+      throw new HttpException('Email not exist', HttpStatus.BAD_REQUEST);
+    }
+
+    return this.authService.loginMerchant(user);
   }
 
   async createMerchant(localUser, brandName, quantityOfPos, paymentCycle) {
@@ -855,7 +880,7 @@ export class MerchantService {
   async addPaymentMethod(merchant, token): Promise<CardInterface> {
     const cards = await this.getPaymentList(merchant);
 
-    if (_.size(cards.data) > 0 ) {
+    if (_.size(cards.data) > 0) {
       throw new ForbiddenException('Cart can\'t be added.');
     }
 
@@ -869,7 +894,7 @@ export class MerchantService {
   async submitPayment(user: PublicUserDto, merchant: MerchantDbDto, card: string): Promise<TransactionInterface> {
     const business = await this.businessService.getByMerchantId(merchant._id);
 
-    return this.subscriptionService.payment(merchant._id, merchant.stripeId, card, {businessId: business._id, email: user.auth.email});
+    return this.subscriptionService.payment(merchant._id, merchant.stripeId, card, { businessId: business._id, email: user.auth.email });
   }
 
   deletePayment(merchant, card): Promise<DeleteCardInterface> {
