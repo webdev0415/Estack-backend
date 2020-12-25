@@ -32,8 +32,11 @@ import { CreateFileDto } from '../filel/dto/create-file.dto';
 import { FilesRepository } from '../filel/files.repository';
 import { BusinessDto } from '../business/dto/business.dto';
 import { CreateOtpDto } from './dto/create-otp.dto';
-import { ValidateOtpDto } from './dto/validate-otp.dto';
 import { EmailValidationService } from 'util/email-validation.service';
+import { PaymentCycleEnum } from 'src/subscription/enum/paymentCycle.enum';
+import { LoginResponseDto } from 'src/auth/dto/login-response.dto';
+import { ValidateOtpDto } from './dto/validate-otp.dto';
+import { CryptoService } from 'util/crypto/crypto/crypto.service';
 
 @Injectable()
 export class MerchantService {
@@ -63,6 +66,7 @@ export class MerchantService {
     private readonly stripeService: StripeService,
     private readonly fileRepository: FilesRepository,
     private readonly emailValidationService: EmailValidationService,
+    private readonly cryptoService: CryptoService,
   ) {
   }
 
@@ -120,27 +124,28 @@ export class MerchantService {
     };
   }
 
-  async otpGenerate(otpRequest: CreateOtpDto) {
+  async otpGenerate(otpRequest: CreateOtpDto): Promise<{ existed: boolean }> {
     const { email } = otpRequest;
     if (await this.usersService.exist({ 'auth.email': email })) {
       // send email
-      return this.emailValidationService.sendCode(email);
+      this.emailValidationService.sendCode(email);
+      return { existed: true };
     }
-    // TODO create merchant. Throw exception for now
-    throw new HttpException('Email not exist', HttpStatus.NOT_FOUND);
+    // TODO we need 2 email templates so split it into 2 cases.
+    this.emailValidationService.sendCode(email);
+    return { existed: false };
   }
 
-  async otpValidate(otp: ValidateOtpDto) {
-    const { email, code } = otp;
-
-    const user = await this.usersService.getByEmail(email);
-
-    if (!user) {
-      throw new HttpException('Email not exist', HttpStatus.UNAUTHORIZED);
-    }
+  /**
+   * create func
+   * @param {ValidateOtpDto} otp - merchant data
+   * @returns {Promise<LoginResponseDto>} - created merchant
+   */
+  async otpConfirm(otp: ValidateOtpDto): Promise<LoginResponseDto> {
+    const dbUser = await this.usersService.getByEmail(otp.email);
 
     // validate code
-    const isValid = await this.emailValidationService.validateCode(email, code);
+    const isValid = await this.emailValidationService.validateCode(otp.email, otp.code);
     if (isValid === false) {
       throw new HttpException({
         code: 4010101,
@@ -150,7 +155,22 @@ export class MerchantService {
       );
     }
 
-    return this.authService.loginMerchant(user);
+    if (dbUser) {
+      return this.authService.loginMerchant(dbUser);
+    } else {
+      await this.create({
+        ...otp,
+        brandName: otp.email,
+        paymentCycle: PaymentCycleEnum.yearly,
+        quantityOfPos: 1,
+        password: this.cryptoService.keyGen(16),
+      } as CreateMerchantDto);
+
+      const createdUser = await this.usersService.getByEmail(otp.email);
+
+      return this.authService.loginMerchant(createdUser);
+    }
+
   }
 
   async createMerchant(localUser, brandName, quantityOfPos, paymentCycle) {

@@ -70,7 +70,7 @@ export class MerchantController {
   @Post('/signup/optgenerate')
   @ApiOperation({ operationId: 'optGenerate' })
   @ApiResponse({ status: 201, description: 'OK' })
-  async optGenerate(@Body() otpRequest: CreateOtpDto): Promise<void> {
+  async optGenerate(@Body() otpRequest: CreateOtpDto): Promise<{ existed: boolean }> {
     this.logger.log(`signup otp ${otpRequest.email}`);
     return this.merchantService.otpGenerate(otpRequest);
   }
@@ -85,7 +85,7 @@ export class MerchantController {
   @ApiResponse({ status: 201, description: 'OK', type: LoginResponseDto })
   async optConfirm(@Body() otp: ValidateOtpDto): Promise<LoginResponseDto> {
     this.logger.log(`validate otp ${otp.email}`);
-    return this.merchantService.otpValidate(otp);
+    return this.merchantService.otpConfirm(otp);
   }
 
   @Get('/service/self')
