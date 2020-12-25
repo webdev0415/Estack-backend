@@ -20,6 +20,9 @@ import { CardInterface, CardList, DeleteCardInterface, TransactionInterface } fr
 import config from '../../config';
 import { BusinessDto } from '../business/dto/business.dto';
 import { UsersService } from '../users/users.service';
+import { CreateOtpDto } from './dto/create-otp.dto';
+import { ValidateOtpDto } from './dto/validate-otp.dto';
+import { LoginResponseDto } from 'src/auth/dto/login-response.dto';
 
 /**
  * merchant controller
@@ -57,6 +60,32 @@ export class MerchantController {
   async createUser(@Body() user: CreateMerchantDto): Promise<PublicMerchantDto> {
     this.logger.log(`signup ${user.email}`);
     return this.merchantService.create(user);
+  }
+
+  /**
+   * /signup/optgenerate endpoint handler
+   * @param {CreateOtpDto} otpRequest - otp data
+   * @returns {Promise<void>}
+   */
+  @Post('/signup/optgenerate')
+  @ApiOperation({ operationId: 'optGenerate' })
+  @ApiResponse({ status: 201, description: 'OK' })
+  async optGenerate(@Body() otpRequest: CreateOtpDto): Promise<void> {
+    this.logger.log(`signup otp ${otpRequest.email}`);
+    return this.merchantService.otpGenerate(otpRequest);
+  }
+
+  /**
+   * /signup/optconfirm endpoint handler
+   * @param {ValidateOtpDto} otp- otp data
+   * @returns {Promise<LoginResponseDto>} - login response
+   */
+  @Post('/signup/optconfirm')
+  @ApiOperation({ operationId: 'optConfirm' })
+  @ApiResponse({ status: 201, description: 'OK', type: LoginResponseDto })
+  async optConfirm(@Body() otp: ValidateOtpDto): Promise<LoginResponseDto> {
+    this.logger.log(`validate otp ${otp.email}`);
+    return this.merchantService.otpValidate(otp);
   }
 
   @Get('/service/self')

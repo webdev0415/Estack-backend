@@ -29,7 +29,7 @@ import { EmailValidationService } from '../../util/email-validation.service';
     }),
   ],
   controllers: [AuthController],
-  exports: [AuthService],
+  exports: [AuthService, EmailValidationService],
   providers: [AuthService, LocalStrategy, CryptoService, EmailValidationService],
 })
 export class AuthModule {
