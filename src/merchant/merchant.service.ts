@@ -33,11 +33,11 @@ import { FilesRepository } from '../filel/files.repository';
 import { BusinessDto } from '../business/dto/business.dto';
 import { CreateOtpDto } from './dto/create-otp.dto';
 import { EmailValidationService } from 'util/email-validation.service';
-import { PaymentCycleEnum } from 'src/subscription/enum/paymentCycle.enum';
 import { LoginResponseDto } from 'src/auth/dto/login-response.dto';
 import { ValidateOtpDto } from './dto/validate-otp.dto';
 import { CryptoService } from 'util/crypto/crypto/crypto.service';
 import { CreateOtpResponseDto } from './dto/create-otp-response.dto';
+import { CreateOtpMerchantDto } from './dto/create-otp-merchant.dto';
 
 @Injectable()
 export class MerchantService {
@@ -142,7 +142,7 @@ export class MerchantService {
    * @param {ValidateOtpDto} otp - merchant data
    * @returns {Promise<LoginResponseDto>} - created merchant
    */
-  async otpConfirm(otp: ValidateOtpDto): Promise<LoginResponseDto> {
+  async otpConfirm(otp: ValidateOtpDto | CreateOtpMerchantDto): Promise<LoginResponseDto> {
     const dbUser = await this.usersService.getByEmail(otp.email);
 
     // validate code
@@ -158,18 +158,17 @@ export class MerchantService {
 
     if (dbUser) {
       return this.authService.loginMerchant(dbUser);
-    } else {
+    } else if (otp.hasOwnProperty('brandName')) {
       await this.create({
         ...otp,
-        brandName: otp.email,
-        paymentCycle: PaymentCycleEnum.yearly,
-        quantityOfPos: 1,
         password: this.cryptoService.keyGen(16),
       } as CreateMerchantDto);
 
       const createdUser = await this.usersService.getByEmail(otp.email);
 
       return this.authService.loginMerchant(createdUser);
+    } else {
+      throw new HttpException('Merchant infos is required', HttpStatus.BAD_REQUEST);
     }
 
   }
