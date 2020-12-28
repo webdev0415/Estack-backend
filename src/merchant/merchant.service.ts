@@ -37,7 +37,6 @@ import { LoginResponseDto } from 'src/auth/dto/login-response.dto';
 import { ValidateOtpDto } from './dto/validate-otp.dto';
 import { CryptoService } from 'util/crypto/crypto/crypto.service';
 import { CreateOtpResponseDto } from './dto/create-otp-response.dto';
-import { CreateOtpMerchantDto } from './dto/create-otp-merchant.dto';
 
 @Injectable()
 export class MerchantService {
@@ -142,7 +141,7 @@ export class MerchantService {
    * @param {ValidateOtpDto} otp - merchant data
    * @returns {Promise<LoginResponseDto>} - created merchant
    */
-  async otpConfirm(otp: ValidateOtpDto | CreateOtpMerchantDto): Promise<LoginResponseDto> {
+  async otpConfirm(otp: ValidateOtpDto): Promise<LoginResponseDto> {
     const dbUser = await this.usersService.getByEmail(otp.email);
 
     // validate code
@@ -158,9 +157,10 @@ export class MerchantService {
 
     if (dbUser) {
       return this.authService.loginMerchant(dbUser);
-    } else if (otp.hasOwnProperty('brandName')) {
+    } else if (otp.hasOwnProperty('options')) {
       await this.create({
-        ...otp,
+        email: otp.email,
+        ...otp.options,
         password: this.cryptoService.keyGen(16),
       } as CreateMerchantDto);
 

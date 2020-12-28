@@ -1,16 +1,35 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { CreateMerchantDto } from './create-merchant.dto';
+import { PaymentCycleEnum } from '../../subscription/enum/paymentCycle.enum';
 
 /** input for create otp merchant endpoint */
-export class CreateOtpMerchantDto extends CreateMerchantDto {
-  /** otp */
+export class CreateOtpMerchantDto {
+  /** brandName */
   @ApiProperty({
-    description: 'Code',
+    description: 'Brand Name',
     required: true,
     format: 'string',
   })
   @IsNotEmpty()
   @IsString()
-  code: string;
+  brandName: string;
+
+  /** paymentCycle */
+  @ApiProperty({
+    description: 'Payment cycle',
+    required: true,
+    format: 'string',
+  })
+  @IsIn(Object.values(PaymentCycleEnum))
+  paymentCycle: string;
+
+  /** quantityOfPos */
+  @ApiProperty({
+    description: 'quantity Of Pos',
+    required: true,
+    format: 'string',
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  quantityOfPos: number;
 }
