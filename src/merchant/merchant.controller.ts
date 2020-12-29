@@ -24,6 +24,7 @@ import { CreateOtpDto } from './dto/create-otp.dto';
 import { ValidateOtpDto } from './dto/validate-otp.dto';
 import { LoginResponseDto } from 'src/auth/dto/login-response.dto';
 import { CreateOtpResponseDto } from './dto/create-otp-response.dto';
+// import { CreateOtpMerchantDto } from './dto/create-otp-merchant.dto';
 
 /**
  * merchant controller

@@ -17,5 +17,10 @@
     "no-unused-variable": true,
     "no-console": ["error", { "allow": ["warn", "error"] }]
   },
+  "indent": [
+    true,
+    "tabs",
+    4
+  ],
   "rulesDirectory": []
 }

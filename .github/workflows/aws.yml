@@ -30,6 +30,7 @@ on:
       - master
       - staging
       - dev
+      - feat/merchant
 
 name: Deploy to Amazon ECS
 
