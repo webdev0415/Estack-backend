@@ -38,6 +38,7 @@ import { LoginResponseDto } from 'src/auth/dto/login-response.dto';
 import { ValidateOtpDto } from './dto/validate-otp.dto';
 import { CryptoService } from 'util/crypto/crypto/crypto.service';
 import { CreateOtpResponseDto } from './dto/create-otp-response.dto';
+import { CreateOtpMerchantDto } from './dto/create-otp-merchant.dto';
 // import { CreateOtpMerchantDto } from './dto/create-otp-merchant.dto';
 
 @Injectable()
@@ -146,6 +147,10 @@ export class MerchantService {
   async otpConfirm(otp: ValidateOtpDto): Promise<LoginResponseDto> {
     const dbUser = await this.usersService.getByEmail(otp.email);
 
+    if (!dbUser) {
+      throw new HttpException('Email not found', HttpStatus.UNAUTHORIZED);
+    }
+
     // validate code
     const isValid = await this.emailValidationService.validateCode(otp.email, otp.code);
     if (isValid === false) {
@@ -157,25 +162,44 @@ export class MerchantService {
       );
     }
 
+    return this.authService.loginMerchant(dbUser);
+  }
+
+  /**
+   * create func
+   * @param {CreateOtpMerchantDto} otp - merchant data
+   * @returns {Promise<LoginResponseDto>} - created merchant
+   */
+  async createOtpMerchant(otp: CreateOtpMerchantDto): Promise<LoginResponseDto> {
+    const dbUser = await this.usersService.getByEmail(otp.email);
+
     if (dbUser) {
-      return this.authService.loginMerchant(dbUser);
-    } else if (otp.hasOwnProperty('options')) {
-      await this.create({
-        email: otp.email,
-        brandName: otp.brandName,
-        paymentCycle: otp.paymentCycle,
-        planType: otp.planType,
-        quantityOfPos: otp.quantityOfPos,
-        password: this.cryptoService.keyGen(16),
-      } as CreateMerchantDto);
-
-      const createdUser = await this.usersService.getByEmail(otp.email);
-
-      return this.authService.loginMerchant(createdUser);
-      } else {
-      throw new HttpException('Merchant infos is required', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Email existed', HttpStatus.CONFLICT);
     }
 
+    // validate code
+    const isValid = await this.emailValidationService.validateCode(otp.email, otp.code);
+    if (isValid === false) {
+      throw new HttpException({
+        code: 4010101,
+        message: 'Invalid verification code',
+      },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    await this.create({
+      email: otp.email,
+      brandName: otp.brandName,
+      paymentCycle: otp.paymentCycle,
+      planType: otp.planType,
+      quantityOfPos: otp.quantityOfPos,
+      password: this.cryptoService.keyGen(16),
+    } as CreateMerchantDto);
+
+    const createdUser = await this.usersService.getByEmail(otp.email);
+
+    return this.authService.loginMerchant(createdUser);
   }
 
   async createMerchant(localUser, brandName, quantityOfPos, paymentCycle) {

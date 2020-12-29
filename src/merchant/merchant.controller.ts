@@ -24,6 +24,7 @@ import { CreateOtpDto } from './dto/create-otp.dto';
 import { ValidateOtpDto } from './dto/validate-otp.dto';
 import { LoginResponseDto } from 'src/auth/dto/login-response.dto';
 import { CreateOtpResponseDto } from './dto/create-otp-response.dto';
+import { CreateOtpMerchantDto } from './dto/create-otp-merchant.dto';
 // import { CreateOtpMerchantDto } from './dto/create-otp-merchant.dto';
 
 /**
@@ -65,29 +66,42 @@ export class MerchantController {
   }
 
   /**
-   * /signup/optgenerate endpoint handler
+   * /signup/otpgenerate endpoint handler
    * @param {CreateOtpDto} otpRequest - otp data
    * @returns {Promise<void>}
    */
-  @Post('/signup/optgenerate')
-  @ApiOperation({ operationId: 'optGenerate' })
+  @Post('/signup/otpgenerate')
+  @ApiOperation({ operationId: 'otpGenerate' })
   @ApiResponse({ status: 201, description: 'OK', type: CreateOtpResponseDto })
-  async optGenerate(@Body() otpRequest: CreateOtpDto): Promise<CreateOtpResponseDto> {
+  async otpGenerate(@Body() otpRequest: CreateOtpDto): Promise<CreateOtpResponseDto> {
     this.logger.log(`signup otp ${otpRequest.email}`);
     return this.merchantService.otpGenerate(otpRequest);
   }
 
   /**
-   * /signup/optconfirm endpoint handler
+   * /signup/otpconfirm endpoint handler
    * @param {ValidateOtpDto} otp- otp data
    * @returns {Promise<LoginResponseDto>} - login response
    */
-  @Post('/signup/optconfirm')
-  @ApiOperation({ operationId: 'optConfirm' })
+  @Post('/signup/otpconfirm')
+  @ApiOperation({ operationId: 'otpConfirm' })
   @ApiResponse({ status: 201, description: 'OK', type: LoginResponseDto })
-  async optConfirm(@Body() otp: ValidateOtpDto): Promise<LoginResponseDto> {
+  async otpConfirm(@Body() otp: ValidateOtpDto): Promise<LoginResponseDto> {
     this.logger.log(`validate otp ${otp.email}`);
     return this.merchantService.otpConfirm(otp);
+  }
+
+  /**
+   * /signup/otpmerchant create merchant use otp endpoint handler
+   * @param {CreateOtpMerchantDto} otp- otp data
+   * @returns {Promise<LoginResponseDto>} - login response
+   */
+  @Post('/signup/otpmerchant')
+  @ApiOperation({ operationId: 'otpmerchant' })
+  @ApiResponse({ status: 201, description: 'OK', type: LoginResponseDto })
+  async otpMerchant(@Body() otp: CreateOtpMerchantDto): Promise<LoginResponseDto> {
+    this.logger.log(`create otp merchant ${otp.email}`);
+    return this.merchantService.createOtpMerchant(otp);
   }
 
   @Get('/service/self')
